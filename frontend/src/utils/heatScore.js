@@ -6,31 +6,35 @@ export function calculateHeatScore(
 ) {
   let score = 0;
 
-  // Apparent temperature contribution
+  // Apparent temperature is the main heat-risk factor
   if (apparentTemperature >= 45) {
-    score += 50;
+    score += 60;
   } else if (apparentTemperature >= 40) {
-    score += 40;
+    score += 50;
   } else if (apparentTemperature >= 35) {
-    score += 30;
+    score += 40;
   } else if (apparentTemperature >= 32) {
+    score += 30;
+  } else if (apparentTemperature >= 30) {
     score += 20;
   } else if (apparentTemperature >= 28) {
     score += 10;
   }
 
-  // Humidity contribution
-  if (humidity >= 90) {
-    score += 30;
-  } else if (humidity >= 80) {
-    score += 25;
-  } else if (humidity >= 70) {
-    score += 15;
-  } else if (humidity >= 60) {
-    score += 10;
+  // Humidity increases heat stress, but only when temperature is warm
+  if (temperature >= 30) {
+    if (humidity >= 90) {
+      score += 20;
+    } else if (humidity >= 80) {
+      score += 15;
+    } else if (humidity >= 70) {
+      score += 10;
+    } else if (humidity >= 60) {
+      score += 5;
+    }
   }
 
-  // Temperature contribution
+  // Actual temperature
   if (temperature >= 40) {
     score += 15;
   } else if (temperature >= 35) {
