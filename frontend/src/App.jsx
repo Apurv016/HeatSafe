@@ -5,10 +5,13 @@ import { getRecommendations } from "./utils/recommendations";
 import { calculateHeatScore } from "./utils/heatScore";
 import { countries } from "./data/countries";
 import { locations } from "./data/locations";
+import { getHottestPeriod } from "./utils/forecast";
 
 function App() {
   const [weather, setWeather] = useState(null);
-  const [error, setError] = useState(null);
+  const [hourly, setHourly] = useState(null);
+const [hottestPeriod, setHottestPeriod] = useState(null);
+const [error, setError] = useState(null);
 
   const [selectedCountry, setSelectedCountry] = useState(countries[0]);
 
@@ -38,7 +41,9 @@ function App() {
 
         const data = await getWeather(latitude, longitude);
 
-        setWeather(data.current);
+        setWeather(data.current); 
+        setHourly(data.hourly);
+        setHottestPeriod(getHottestPeriod(data.hourly));
       } catch (err) {
         setError("Unable to fetch weather data.");
       }
@@ -236,6 +241,34 @@ function App() {
           </div>
 
         </div>
+                {/* HOTTEST PERIOD */}
+
+        {hottestPeriod && (
+          <div className="forecast-card">
+
+            <h2>🔥 Hottest Period</h2>
+
+            <div className="forecast-temperature">
+              Feels like {hottestPeriod.apparentTemperature}°C
+            </div>
+
+            <div className="forecast-time">
+              {new Date(hottestPeriod.time).toLocaleTimeString([], {
+                hour: "numeric",
+                minute: "2-digit",
+              })}
+            </div>
+
+            <div className="forecast-details">
+              🌡️ {hottestPeriod.temperature}°C
+              &nbsp; • &nbsp;
+              💧 {hottestPeriod.humidity}%
+              &nbsp; • &nbsp;
+              ☀️ UV {hottestPeriod.uvIndex}
+            </div>
+
+          </div>
+        )}
 
         {/* WEATHER CARDS */}
 
