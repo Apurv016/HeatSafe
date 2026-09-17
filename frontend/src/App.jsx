@@ -6,9 +6,16 @@ import { calculateHeatScore } from "./utils/heatScore";
 import { countries } from "./data/countries";
 import { locations } from "./data/locations";
 import { getHottestPeriod } from "./utils/forecast";
-
+import { getHydrationRecommendation } from "./utils/hydration";
 function App() {
   const [weather, setWeather] = useState(null);
+  const [waterConsumed, setWaterConsumed] = useState(() => {
+  const savedWater = localStorage.getItem("heatsafe-water");
+  return savedWater ? Number(savedWater) : 0;
+});
+useEffect(() => {
+  localStorage.setItem("heatsafe-water", waterConsumed);
+}, [waterConsumed]);
   const [hourly, setHourly] = useState(null);
 const [hottestPeriod, setHottestPeriod] = useState(null);
 const [error, setError] = useState(null);
@@ -73,7 +80,20 @@ const [error, setError] = useState(null);
     weather.uv_index,
     risk.level
   );
+  const hydrationAmount = getHydrationRecommendation(
+  weather.temperature_2m,
+  weather.relative_humidity_2m,
+  risk.level
+  );
+  const hydrationProgress = Math.min(
+  (waterConsumed / hydrationAmount) * 100,
+  100
+);
 
+const remainingWater = Math.max(
+  hydrationAmount - waterConsumed,
+  0
+);
   return (
     <div className="app">
 
@@ -239,6 +259,33 @@ const [error, setError] = useState(null);
             </div>
 
           </div>
+          <div className="risk-explanation">
+
+  <h3>
+  🧠 Why is the risk {risk.level.replace(" RISK", "").toLowerCase()}?
+</h3>
+
+  <div className="risk-factors">
+
+    <div>
+      🌡️ Temperature: {weather.temperature_2m}°C
+    </div>
+
+    <div>
+      💦 Feels like: {weather.apparent_temperature}°C
+    </div>
+
+    <div>
+      💧 Humidity: {weather.relative_humidity_2m}%
+    </div>
+
+    <div>
+      ☀️ UV Index: {weather.uv_index}
+    </div>
+
+  </div>
+
+</div>
 
         </div>
                 {/* HOTTEST PERIOD */}
@@ -339,6 +386,60 @@ const [error, setError] = useState(null);
           </div>
 
         </div>
+                {/* HYDRATION */}
+
+        <section className="hydration-card">
+
+  <div className="hydration-icon">
+    💧
+  </div>
+
+  <div className="hydration-content">
+
+    <h2>Hydration Target</h2>
+
+    <div className="hydration-amount">
+      {hydrationAmount} mL/day
+    </div>
+
+    <p>
+      You've consumed {waterConsumed} mL today.
+    </p>
+
+    <div className="hydration-progress">
+      <div
+        className="hydration-progress-fill"
+        style={{ width: `${hydrationProgress}%` }}
+      ></div>
+    </div>
+
+    <div className="hydration-progress-text">
+      {Math.round(hydrationProgress)}% complete
+      &nbsp; • &nbsp;
+      {remainingWater} mL remaining
+    </div>
+
+    <div className="hydration-actions">
+
+      <button
+        onClick={() =>
+          setWaterConsumed((current) => current + 250)
+        }
+      >
+        +250 mL
+      </button>
+
+      <button
+        onClick={() => setWaterConsumed(0)}
+      >
+        Reset
+      </button>
+
+    </div>
+
+  </div>
+
+</section>
 
         {/* SAFETY RECOMMENDATIONS */}
 
