@@ -1,12 +1,19 @@
 from fastapi import FastAPI, Query
-import httpx
+from fastapi.middleware.cors import CORSMiddleware
+from services.weather_service import get_weather
 
 app = FastAPI(
     title="HeatSafe API",
     description="Backend API for the HeatSafe heat-risk and safety application.",
     version="1.0.0",
 )
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def root():
@@ -22,35 +29,11 @@ def health_check():
         "status": "healthy",
         "service": "HeatSafe Backend",
     }
+
+
 @app.get("/api/weather")
-async def get_weather(
+async def weather_endpoint(
     latitude: float = Query(..., description="Location latitude"),
     longitude: float = Query(..., description="Location longitude"),
 ):
-    url = "https://api.open-meteo.com/v1/forecast"
-
-    params = {
-        "latitude": latitude,
-        "longitude": longitude,
-        "current": (
-            "temperature_2m,"
-            "relative_humidity_2m,"
-            "apparent_temperature,"
-            "uv_index,"
-            "wind_speed_10m"
-        ),
-        "hourly": (
-            "temperature_2m,"
-            "relative_humidity_2m,"
-            "apparent_temperature,"
-            "uv_index"
-        ),
-        "timezone": "auto",
-    }
-
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url, params=params)
-
-    response.raise_for_status()
-
-    return response.json()
+    return await get_weather(latitude, longitude)
