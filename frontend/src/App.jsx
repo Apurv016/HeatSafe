@@ -13,6 +13,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import { getWeather } from "./services/weatherService";
+import { getHeatRisk } from "./services/heatRiskService";
 import { getRecommendations } from "./utils/recommendations";
 import { calculateHeatScore } from "./utils/heatScore";
 import { countries } from "./data/countries";
@@ -38,7 +39,7 @@ const [hottestPeriod, setHottestPeriod] = useState(null);
 const [selectedTimelineTime, setSelectedTimelineTime] = useState(null);
 const [error, setError] = useState(null);
 const [currentTime, setCurrentTime] = useState(new Date());
-
+const [backendRisk, setBackendRisk] = useState(null);
 useEffect(() => {
   const timer = setInterval(() => {
     setCurrentTime(new Date());
@@ -72,6 +73,14 @@ useEffect(() => {
           selectedCountry.longitude;
         const data = await getWeather(latitude, longitude);
 setWeather(data.current);
+
+const backendRiskResult = await getHeatRisk(
+  data.current.temperature_2m,
+  data.current.relative_humidity_2m,
+  data.current.apparent_temperature,
+  data.current.uv_index
+);
+setBackendRisk(backendRiskResult);
 setLocationTimezone(data.timezone || "Asia/Kolkata");
 setTimezoneAbbreviation(data.timezoneAbbreviation || "IST");
 setUtcOffsetSeconds(data.utcOffsetSeconds ?? 19800);
@@ -94,7 +103,9 @@ setHeatTimeline(getHeatTimeline(data.hourly));
     return <div className="app">Loading weather...</div>;
   }
 
-  const risk = calculateHeatScore(
+  const risk =
+  backendRisk ||
+  calculateHeatScore(
     weather.temperature_2m,
     weather.relative_humidity_2m,
     weather.apparent_temperature,
